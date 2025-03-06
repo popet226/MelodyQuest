@@ -50,7 +50,15 @@ def search_command(message):
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     if is_bot_active:
-        response = f"Ищем песню: {message.text}"
+        song_name = message.text
+        
+        results = search_song(song_name)
+        
+        if results:
+            response = "Вот что я нашел:\n\n" + "\n".join(results)
+        else:
+            response = "К сожалению, я не смог найти эту песню."
+        
         bot.send_message(message.chat.id, response)
     else:
         bot.reply_to(message, 'Для начала работы с ботом введите /start')
