@@ -46,22 +46,31 @@ def search_command(message):
         bot.reply_to(message, 'Какую песню хочешь скачать?')
     else:
         bot.reply_to(message, 'Для начала работы с ботом введите /start')
-        
+
+def send_message_safe(chat_id, text):
+    """Функция для безопасной отправки длинных сообщений."""
+    max_length = 4096  # Лимит Telegram
+    for i in range(0, len(text), max_length):
+        bot.send_message(chat_id, text[i:i + max_length])
+
 @bot.message_handler(content_types=['text'])
 def handle_text(message):
     if is_bot_active:
-        song_name = message.text
+        song_name = message.text.strip()
         
         results = search_song(song_name)
         
         if results:
-            response = "Вот что я нашел:\n\n" + "\n".join(results)
+            limited_results = results[:5]
+            response = "Вот что я нашел:\n\n" + "\n".join(limited_results)
         else:
             response = "К сожалению, я не смог найти эту песню."
         
-        bot.send_message(message.chat.id, response)
+        send_message_safe(message.chat.id, response)
+        
     else:
         bot.reply_to(message, 'Для начала работы с ботом введите /start')
+    
     
 def run_bot():
     """Запускает Telegram-бота"""
