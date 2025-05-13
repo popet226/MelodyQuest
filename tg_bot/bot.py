@@ -5,13 +5,13 @@ import telebot
 import sys
 import logging
 
-# Настройка логирования
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 logger.info("Запуск скрипта бота")
 
-# Добавляем корневую директорию проекта в sys.path
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(BASE_DIR)
 logger.info(f"Добавлен путь в sys.path: {BASE_DIR}")
@@ -38,7 +38,7 @@ logger.info("Получен TELEGRAM_BOT_TOKEN")
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN)
 logger.info("Бот успешно создан")
 
-# Флаг для отслеживания состояния работы бота
+
 is_bot_active = False
 
 @bot.message_handler(commands=['start'])

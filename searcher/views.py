@@ -5,7 +5,7 @@ import yt_dlp
 import logging
 import time
 
-# Настройка логирования
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ def get_download_link_yt_dlp(video_url):
                 logger.error(f"Получен потоковый формат (protocol={protocol}, ext={format_ext}, acodec={acodec}): {download_url[:100]}...")
                 return None, None
             
-            # Проверяем заголовки ответа
+            
             try:
                 response = requests.head(download_url, allow_redirects=True)
                 headers = response.headers
@@ -89,6 +89,6 @@ def search_song(song_name):
         download_url, file_size = get_download_link_yt_dlp(link)
         if download_url:
             results.append((download_url, file_size))
-        time.sleep(0.5)  # Задержка для избежания ограничений
+        time.sleep(0.5)  
     
-    return results[:10]  # Возвращаем до 10 кортежей (url, size)
+    return results[:10]  # 10 кортежей (url, size)
