@@ -4,7 +4,9 @@ import os
 import telebot
 import sys
 import logging
+import time
 from telebot import types 
+from threading import Thread
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -70,6 +72,24 @@ def show_welcome(message):
         reply_markup=create_main_keyboard()
     )
 
+def update_progress(chat_id, progress, message_id=None):
+    """Обновляет индикатор прогресса"""
+    icons = ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚']
+    text = f"{icons[progress % len(icons)]} Ищем музыку... ({progress*10 if progress < 10 else 99}%)"
+    
+    try:
+        if message_id:
+            bot.edit_message_text(
+                text,
+                chat_id=chat_id,
+                message_id=message_id
+            )
+        else:
+            msg = bot.send_message(chat_id, text)
+            return msg.message_id
+    except Exception as e:
+        logger.error(f"Ошибка обновления прогресса: {e}")
+
 @bot.message_handler(commands=['start'])
 def start_command(message):
     global is_bot_active
@@ -79,15 +99,6 @@ def start_command(message):
     else:
         bot.reply_to(message, '✅ Бот уже активен. Используйте кнопки меню!')
 
-@bot.message_handler(commands=['stop'])
-def stop_command(message):
-    global is_bot_active
-    if is_bot_active:
-        remove_keyboard = types.ReplyKeyboardRemove()
-        bot.send_message(message.chat.id, 'Бот завершил свою работу. До свидания!', reply_markup=remove_keyboard)
-        is_bot_active = False
-    else:
-        bot.reply_to(message, 'Бот не активен. Введи /start для начала.')
 
 @bot.message_handler(commands=['help', 'about'])
 @bot.message_handler(func=lambda message: message.text in ['❓ Помощь', 'Помощь'])
@@ -177,9 +188,28 @@ def send_message_safe(chat_id, text, parse_mode=None):
 def process_search_query(message):
     song_name = message.text.strip()
     logger.info(f"Получен запрос на поиск песни: {song_name}")
-    bot.send_message(message.chat.id, 'Обрабатываю ваш запрос, пожалуйста, подождите...')
+    # bot.send_message(message.chat.id, 'Обрабатываю ваш запрос, пожалуйста, подождите...')
+
+    progress_msg_id = update_progress(message.chat.id, 0)
+    user_progress[message.chat.id] = {'progress': 0, 'msg_id': progress_msg_id}
     
+    def update_progress_thread():
+        for i in range(1, 11):
+            time.sleep(30)
+            if message.chat.id in user_progress:
+                user_progress[message.chat.id]['progress'] = i
+                update_progress(message.chat.id, i, user_progress[message.chat.id]['msg_id'])
+    
+    Thread(target=update_progress_thread).start()
+
     results = search_song(song_name)
+
+    if message.chat.id in user_progress:
+        try:
+            bot.delete_message(message.chat.id, user_progress[message.chat.id]['msg_id'])
+        except:
+            pass
+        del user_progress[message.chat.id]
     
     if results:
         response = "🎶 <b>Результаты поиска:</b>\n\n"
@@ -202,15 +232,17 @@ def process_search_query(message):
         response = """
 📥 <b>Как скачать музыку:</b>
 
+<u><b>⚠️ Для скачивания придется использовать VPN сервисы </b></u>
 <u>На компьютере:</u>
-1. Кликните по ссылке "Скачать"
+1. Кликните по ссылке 
 2. Нажмите <i>Ctrl+S</i> (Windows/Linux) или <i>Cmd+S</i> (Mac)
-3. Выберите папку для сохранения
+3. "Сохранить как..." (.m4a)
 
 <u>На смартфоне:</u>
 📱 <b>Android:</b>
 • Используйте браузер Chrome
 • Нажмите "⋮" → "Скачать"
+• Или используйте приложение "Download Manager" (Google Play).
 
 🍏 <b>iPhone:</b>
 • Откройте в Safari
