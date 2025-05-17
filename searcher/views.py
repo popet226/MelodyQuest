@@ -11,7 +11,6 @@ from urllib.parse import quote
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Общие заголовки для всех запросов
 COMMON_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
     'Accept': 'audio/mp4,audio/webm,*/*;q=0.9',
@@ -29,7 +28,6 @@ def get_file_size(url):
     return None
 
 def search_song_hitmotop(song_name):
-    """Поиск песен на Hitmotop"""
     results = []
     try:
         encoded_query = quote(song_name)
@@ -50,7 +48,7 @@ def search_song_hitmotop(song_name):
             logger.info("Hitmotop: Треки не найдены")
             return results
 
-        for item in track_items[:5]:  # Ограничиваем 5 результатами
+        for item in track_items[:5]: 
             musmeta = item.get('data-musmeta')
             if not musmeta:
                 continue
@@ -61,7 +59,6 @@ def search_song_hitmotop(song_name):
                 if not download_url:
                     continue
                     
-                # Получаем размер файла
                 file_size = get_file_size(download_url)
                 
                 results.append((download_url, file_size))
@@ -75,7 +72,7 @@ def search_song_hitmotop(song_name):
     return results
 
 def search_song_youtube(song_name):
-    """Поиск песен на YouTube"""
+
     api_key = os.getenv("YOUTUBE_API_KEY")
     if not api_key:
         logger.error("YouTube API ключ не найден")
@@ -87,7 +84,7 @@ def search_song_youtube(song_name):
         "q": song_name,
         "type": "video",
         "key": api_key,
-        "maxResults": 5  # Ограничиваем 5 результатами
+        "maxResults": 5
     }
     
     try:
@@ -104,7 +101,6 @@ def search_song_youtube(song_name):
     return []
 
 def get_download_link_yt_dlp(video_url):
-    """Получение ссылки на скачивание с YouTube"""
     ydl_opts = {
         'format': 'bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio[acodec=aac]/bestaudio[acodec=opus][ext=webm][protocol!=hls][protocol!=m3u8]',
         'quiet': True,
@@ -138,17 +134,14 @@ def get_download_link_yt_dlp(video_url):
             return None, None
 
 def search_song(song_name):
-    """Основная функция поиска песен (интерфейс соответствует скелету бота)"""
     if not song_name or not song_name.strip():
         return []
         
     song_name = song_name.strip()
     logger.info(f"Начало поиска для: '{song_name}'")
     
-    # Поиск на Hitmotop (быстрее, поэтому сначала)
     hitmotop_results = search_song_hitmotop(song_name)
     
-    # Поиск на YouTube (медленнее)
     youtube_results = []
     video_links = search_song_youtube(song_name)
     for link in video_links:
@@ -157,13 +150,12 @@ def search_song(song_name):
             youtube_results.append((download_url, file_size))
         time.sleep(0.5)
     
-    # Объединяем результаты (первые 3 из каждого сервиса)
     combined_results = hitmotop_results[:2] + youtube_results[:3]
     
-    # Логируем итоговые результаты
+
     logger.info(f"Найдено результатов: {len(combined_results)}")
     for idx, (url, size) in enumerate(combined_results, 1):
         size_str = f"{size/1024/1024:.1f} MB" if size and size != float('inf') else "unknown"
         logger.info(f"Результат {idx}: {url[:60]}... (размер: {size_str})")
     
-    return combined_results[:5]  # Возвращаем не более 5 результатов
+    return combined_results[:5] 
