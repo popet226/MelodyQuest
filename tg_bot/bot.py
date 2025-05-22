@@ -75,7 +75,7 @@ def show_welcome(message):
 def update_progress(chat_id, progress, message_id=None):
     """Обновляет индикатор прогресса"""
     icons = ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚']
-    text = f"{icons[progress % len(icons)]} Ищем музыку... ({progress*10 if progress < 10 else 99}%)"
+    text = f"{icons[progress % len(icons)]} Ищем музыку... "
     
     try:
         if message_id:
@@ -194,8 +194,8 @@ def process_search_query(message):
     user_progress[message.chat.id] = {'progress': 0, 'msg_id': progress_msg_id}
     
     def update_progress_thread():
-        for i in range(1, 11):
-            time.sleep(30)
+        for i in range(1, 1000):
+            time.sleep(1)
             if message.chat.id in user_progress:
                 user_progress[message.chat.id]['progress'] = i
                 update_progress(message.chat.id, i, user_progress[message.chat.id]['msg_id'])
