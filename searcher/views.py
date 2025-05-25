@@ -16,6 +16,25 @@ COMMON_HEADERS = {
     'Accept': 'audio/mp4,audio/webm,*/*;q=0.9',
 }
 
+def write_cookies_from_env(env_var_name='YOUTUBE_COOKIES', filepath='cookies.txt'):
+    cookies_content = os.getenv(env_var_name)
+    if not cookies_content:
+        raise RuntimeError(f"Переменная окружения {env_var_name} не задана!")
+    
+
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+            print(f"Удалён старый файл куков: {filepath}")
+        except Exception as e:
+            raise RuntimeError(f"Не удалось удалить старый файл: {e}")
+    
+    cookies_text = cookies_content.encode('utf-8').decode('unicode_escape')
+    
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(cookies_text)
+    print(f"Файл с куками записан: {filepath}")
+
 def get_file_size(url):
     """Получает размер файла по URL без скачивания всего файла"""
     try:
@@ -107,7 +126,8 @@ def get_download_link_yt_dlp(video_url):
         'noplaylist': True,
         'extractaudio': True,
         'geturl': True,
-        'http_headers': COMMON_HEADERS,
+        'http_headers': COMMON_HEADERS, 
+        'cookiefile': r'D:\University\SecondTry\music_searcher\searcher\cookies.txt',
     }
     
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -136,6 +156,8 @@ def get_download_link_yt_dlp(video_url):
 def search_song(song_name):
     if not song_name or not song_name.strip():
         return []
+    
+    write_cookies_from_env(filepath='D:/University/SecondTry/music_searcher/searcher/cookies.txt')
         
     song_name = song_name.strip()
     logger.info(f"Начало поиска для: '{song_name}'")

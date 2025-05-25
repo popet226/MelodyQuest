@@ -30,6 +30,7 @@ logger.info("Импортирована функция search_song")
 load_dotenv()
 logger.info("Загружены переменные окружения")
 
+
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not TELEGRAM_BOT_TOKEN:
     logger.error("TELEGRAM_BOT_TOKEN не найден в .env")
