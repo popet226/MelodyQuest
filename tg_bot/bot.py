@@ -74,7 +74,7 @@ def show_welcome(message):
 
 def update_progress(chat_id, progress, message_id=None):
     icons = ['🕛', '🕐', '🕑', '🕒', '🕓', '🕔', '🕕', '🕖', '🕗', '🕘', '🕙', '🕚']
-    text = f"{icons[progress % len(icons)]} Ищем музыку... ({progress*10 if progress < 10 else 99}%)"
+    text = f"{icons[progress % len(icons)]} Ищем музыку... "
     
     try:
         if message_id:
@@ -191,45 +191,45 @@ def process_search_query(message):
         logger.info(f"Получен запрос на поиск песни: {song_name}")
         # bot.send_message(message.chat.id, 'Обрабатываю ваш запрос, пожалуйста, подождите...')
 
-        progress_msg_id = update_progress(message.chat.id, 0)
-        user_progress[message.chat.id] = {'progress': 0, 'msg_id': progress_msg_id}
-        
-        def update_progress_thread():
-            for i in range(1, 11):
-                time.sleep(30)
-                if message.chat.id in user_progress:
-                    user_progress[message.chat.id]['progress'] = i
-                    update_progress(message.chat.id, i, user_progress[message.chat.id]['msg_id'])
-        
-        Thread(target=update_progress_thread).start()
+    progress_msg_id = update_progress(message.chat.id, 0)
+    user_progress[message.chat.id] = {'progress': 0, 'msg_id': progress_msg_id}
+    
+    def update_progress_thread():
+        for i in range(1, 1000):
+            time.sleep(1)
+            if message.chat.id in user_progress:
+                user_progress[message.chat.id]['progress'] = i
+                update_progress(message.chat.id, i, user_progress[message.chat.id]['msg_id'])
+    
+    Thread(target=update_progress_thread).start()
 
-        results = search_song(song_name)
+    results = search_song(song_name)
 
-        if message.chat.id in user_progress:
-            try:
-                bot.delete_message(message.chat.id, user_progress[message.chat.id]['msg_id'])
-            except:
-                pass
-            del user_progress[message.chat.id]
+    if message.chat.id in user_progress:
+        try:
+            bot.delete_message(message.chat.id, user_progress[message.chat.id]['msg_id'])
+        except:
+            pass
+        del user_progress[message.chat.id]
         
-        if results:
-            response = "🎶 <b>Результаты поиска:</b>\n\n"
-            for idx, (link, file_size) in enumerate(results[:5], 1):
-                size_mb = file_size / 1024 / 1024 if file_size != float('inf') else "?"
-                size_str = f"{size_mb:.1f}MB" if isinstance(size_mb, float) else f"{size_mb}MB"
+    if results:
+        response = "🎶 <b>Результаты поиска:</b>\n\n"
+        for idx, (link, file_size) in enumerate(results[:5], 1):
+            size_mb = file_size / 1024 / 1024 if file_size != float('inf') else "?"
+            size_str = f"{size_mb:.1f}MB" if isinstance(size_mb, float) else f"{size_mb}MB"
                 
-                response = (
-                    f"{idx}. <b>Скачать</b> [{size_str}]:\n"
-                    f"   🔊 <a href='{link}'>Открыть в браузере</a>\n"
+            response = (
+                f"{idx}. <b>Скачать</b> [{size_str}]:\n"
+                f"   🔊 <a href='{link}'>Открыть в браузере</a>\n"
                 )
 
-                send_message_safe(
-                    message.chat.id,
-                    response,
-                    parse_mode='HTML',
-                )
+            send_message_safe(
+                message.chat.id,
+                response,
+                parse_mode='HTML',
+            )
             
-            response = """
+        response = """
 📥 <b>Как скачать музыку:</b>
 
 <u><b>⚠️ Для скачивания придется использовать VPN сервисы </b></u>
@@ -251,21 +251,19 @@ def process_search_query(message):
 🔧 <i>Если не получается скачать, попробуйте другую ссылку или повторите поиск.</i>
 """
 
-            bot.send_message(
-                message.chat.id,
-                response,
-                parse_mode='HTML',
-                disable_web_page_preview=True,
-                reply_markup=create_main_keyboard()
-            )
-        else:
-            bot.send_message(
-                message.chat.id,
-                "😔 Не удалось найти трек. Попробуйте изменить запрос.",
-                reply_markup=create_main_keyboard()
-            )
+        bot.send_message(
+            message.chat.id,
+            response,
+            parse_mode='HTML',
+            disable_web_page_preview=True,
+            reply_markup=create_main_keyboard()
+        )
     else:
-        bot.reply_to(message, 'Для начала работы с ботом введи /start')
+        bot.send_message(
+            message.chat.id,
+            "😔 Не удалось найти трек. Попробуйте изменить запрос.",
+            reply_markup=create_main_keyboard()
+        )
 
 
 def run_bot():
